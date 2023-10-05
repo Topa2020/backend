@@ -1,5 +1,13 @@
 const express = require('express')
 const app = express()
+const morgan = require('morgan')
+const cors = require('cors')
+
+app.use(express.json())
+app.use(morgan('tiny'))
+app.use(cors())
+app.use(express.static('dist'))
+
 
 let persons = [
       { 
@@ -56,6 +64,45 @@ app.delete('/api/persons/:id', (request, response) => {
 
   })
 
-const PORT = 3001
-app.listen(PORT)
-console.log(`Server running on port ${PORT}`)
+  const generateId = () => {
+    const randomId = Math.floor(Math.random() * 10000)
+    return randomId
+  }
+
+  app.post('/api/persons', (request, response) => {
+    const body = request.body
+   
+    const personas = persons.map(p => p.name.includes(body.name))
+    if (!body.name || !body.number) {
+      return response.status(400).json({ 
+        error: 'content missing' 
+      })
+    } else if (personas.includes(true)) {
+      return response.status(400).json({ 
+        error: 'name must be unique' 
+      })
+
+    }
+    else {
+    const person = {
+      name: body.name,
+      number: body.number,
+      id: generateId(),
+
+    }
+
+    persons = persons.concat(person)
+    response.json(person)
+
+
+  }})
+
+  
+
+  
+
+
+  const PORT = process.env.PORT || 3001
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`)
+  })
